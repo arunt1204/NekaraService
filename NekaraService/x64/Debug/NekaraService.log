@@ -1,0 +1,8 @@
+﻿  pch.cpp
+  dllmain.cpp
+  NekaraService.cpp
+C:\Users\t-arut\Documents\Base\PublicRepo\NekaraServiceCpp\NekaraService\NekaraService\NekaraService.h(195,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\t-arut\Documents\Base\PublicRepo\NekaraServiceCpp\NekaraService\NekaraService\NekaraService.h(196,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  Generating Code...
+     Creating library C:\Users\t-arut\Documents\Base\PublicRepo\NekaraServiceCpp\NekaraService\x64\Debug\NekaraService.lib and object C:\Users\t-arut\Documents\Base\PublicRepo\NekaraServiceCpp\NekaraService\x64\Debug\NekaraService.exp
+  NekaraService.vcxproj -> C:\Users\t-arut\Documents\Base\PublicRepo\NekaraServiceCpp\NekaraService\x64\Debug\NekaraService.dll

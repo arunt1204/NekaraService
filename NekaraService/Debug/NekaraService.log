@@ -1,0 +1,10 @@
+﻿  pch.cpp
+  dllmain.cpp
+  NekaraService.cpp
+  Generating Code...
+     Creating library C:\Users\t-arut\Documents\Base\PublicRepo\NekaraServiceCpp\NekaraService\Debug\NekaraService.lib and object C:\Users\t-arut\Documents\Base\PublicRepo\NekaraServiceCpp\NekaraService\Debug\NekaraService.exp
+NekaraService.obj : error LNK2019: unresolved external symbol __imp__sem_init referenced in function "public: void __thiscall NS::ProjectState::ThreadStarting(int)" (?ThreadStarting@ProjectState@NS@@QAEXH@Z)
+NekaraService.obj : error LNK2019: unresolved external symbol __imp__sem_wait referenced in function "public: void __thiscall NS::NekaraService::ContextSwitch(void)" (?ContextSwitch@NekaraService@NS@@QAEXXZ)
+NekaraService.obj : error LNK2019: unresolved external symbol __imp__sem_post referenced in function "public: void __thiscall NS::NekaraService::ContextSwitch(void)" (?ContextSwitch@NekaraService@NS@@QAEXXZ)
+C:\Users\t-arut\source\repos\WSClient\pthreads-w32-2-9-1-release\Pre-built.2\lib\x64\pthreadVC2.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'x86'
+C:\Users\t-arut\Documents\Base\PublicRepo\NekaraServiceCpp\NekaraService\Debug\NekaraService.dll : fatal error LNK1120: 3 unresolved externals

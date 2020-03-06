@@ -2,8 +2,11 @@
 #include "NekaraService.h"
 
 NS::NekaraService* _ns;
+NS::NekaraService* _nsj;
 
-extern "C" {
+
+// C# Bindings
+ extern "C" {
     __declspec(dllexport) void NS_WithoutSeed() {
         _ns = new NS::NekaraService();
     }
@@ -86,4 +89,48 @@ extern "C" {
         _ns = NULL;
         return true;
     }
+}
+
+
+
+ // JAVA Bindings
+#include "C:\Users\t-arut\eclipse-workspace\TestProject\src\NekaraServiceJava.h"
+#include "C:\Program Files\Java\jdk1.8.0_241\include\jni.h"
+#include "C:\Program Files\Java\jdk1.8.0_241\include\win32\jni_md.h"
+
+
+extern "C" {
+    JNIEXPORT void JNICALL Java_NekaraServiceJava_NSJ_1WithoutSeed(JNIEnv* env, jobject obj) {
+        _nsj = new NS::NekaraService();
+    }
+
+    JNIEXPORT void JNICALL Java_NekaraServiceJava_NSJ_1WithSeed(JNIEnv* env, jobject obj, jint _seed) {
+        _nsj = new NS::NekaraService(_seed);
+    }
+
+    JNIEXPORT void JNICALL Java_NekaraServiceJava_NSJ_1CreateThread(JNIEnv* env, jobject obj) {
+        assert(_nsj != NULL && "Nekara Testing Service not Initialized");
+        _nsj->CreateThread();
+    }
+
+    JNIEXPORT void JNICALL Java_NekaraServiceJava_NSJ_1StartThread(JNIEnv* env, jobject obj, jint _threadID) {
+        assert(_nsj != NULL && "Nekara Testing Service not Initialized");
+        _nsj->StartThread(_threadID);
+    }
+
+    JNIEXPORT void JNICALL Java_NekaraServiceJava_NSJ_1EndThread(JNIEnv* env, jobject obj, jint _threadID) {
+        assert(_nsj != NULL && "Nekara Testing Service not Initialized");
+        _nsj->EndThread(_threadID);
+    }
+
+    JNIEXPORT void JNICALL Java_NekaraServiceJava_NSJ_1ContextSwitch(JNIEnv* env, jobject obj) {
+        assert(_nsj != NULL && "Nekara Testing Service not Initialized");
+        _nsj->ContextSwitch();
+    }
+
+    JNIEXPORT void JNICALL Java_NekaraServiceJava_NSJ_1WaitforMainTask(JNIEnv* env, jobject obj) {
+        assert(_nsj != NULL && "Nekara Testing Service not Initialized");
+        _nsj->WaitforMainTask();
+    }
+
 }

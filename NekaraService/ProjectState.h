@@ -32,14 +32,14 @@ namespace NS {
 		{
 			if (numPendingTaskCreations < 1)
 			{
-				std::cerr << "Unexpected StartTask/Thread! StartTask/Thread with id '" << _threadID << "' called without calling CreateTask/Thread" << '\n';
+				std::cerr << "ERROR: Unexpected StartTask/Thread! StartTask/Thread with id '" << _threadID << "' called without calling CreateTask/Thread" << '\n';
 				abort();
 			}
 
 			std::map<int, sem_t>::iterator _it1 = _th_to_sem.find(_threadID);
 			if (_it1 != _th_to_sem.end())
 			{
-				std::cerr << "Duplicate declaration of Task/Thread id:" << _threadID << ".\n";
+				std::cerr << "ERROR: Duplicate declaration of Task/Thread id:" << _threadID << ".\n";
 				abort();
 			}
 
@@ -55,7 +55,7 @@ namespace NS {
 			std::map<int, sem_t>::iterator _it1 = _th_to_sem.find(_threadID);
 			if (_it1 == _th_to_sem.end())
 			{
-				std::cerr << "EndTask/Thread called on unknown or already completed Task/Thread:" << _threadID << ".\n";
+				std::cerr << "ERROR: EndTask/Thread called on unknown or already completed Task/Thread:" << _threadID << ".\n";
 				abort();
 			}
 
@@ -68,7 +68,7 @@ namespace NS {
 			std::set<int>::iterator _it1 = _resourceIDs.find(_resourceID);
 			if (_it1 != _resourceIDs.end())
 			{
-				std::cerr << "Duplicate declaration of resource:" << _resourceID << ".\n";
+				std::cerr << "ERROR: Duplicate declaration of resource:" << _resourceID << ".\n";
 				abort();
 			}
 
@@ -80,7 +80,7 @@ namespace NS {
 			std::set<int>::iterator _it1 = _resourceIDs.find(_resourceID);
 			if (_it1 == _resourceIDs.end())
 			{
-				std::cerr << "DeleteResource called on unknown or already deleted resource:" << _resourceID << ".\n";
+				std::cerr << "ERROR: DeleteResource called on unknown or already deleted resource:" << _resourceID << ".\n";
 				abort();
 			}
 
@@ -89,7 +89,7 @@ namespace NS {
 				std::set<int>* _set1 = _it->second;
 				if (_set1->find(_resourceID) != _set1->end())
 				{
-					std::cerr << "DeleteResource called on resource with id:" << _resourceID << ". But some tasks/threads are blocked on it.\n";
+					std::cerr << "ERROR: DeleteResource called on resource with id:" << _resourceID << ". But some tasks/threads are blocked on it.\n";
 					abort();
 				}
 			}
@@ -102,14 +102,14 @@ namespace NS {
 			std::set<int>::iterator _it1 = _resourceIDs.find(_resourceID);
 			if (_it1 == _resourceIDs.end())
 			{
-				std::cerr << "Illegal operation, resource: " << _resourceID << " has not been declared/created.\n";
+				std::cerr << "ERROR: Illegal operation, resource: " << _resourceID << " has not been declared/created.\n";
 				abort();
 			}
 
 			std::map<int, std::set<int>*>::iterator _it2 = _blocked_task.find(_threadID);
 			if (_it2 != _blocked_task.end())
 			{
-				std::cerr << "Illegal operation, task/thread: " << _threadID << " already blocked on a resource.\n";
+				std::cerr << "ERROR: Illegal operation, task/thread: " << _threadID << " already blocked on a resource.\n";
 				abort();
 			}
 
@@ -119,9 +119,29 @@ namespace NS {
 			_blocked_task[_threadID] = _set1;
 		}
 
-		void BlockThreadonAnyResource(int _threadID, int* _resourceID[])
+		void BlockThreadonAnyResource(int _threadID, int _resourceID[], int _size)
 		{
+			std::map<int, std::set<int>*>::iterator _it2 = _blocked_task.find(_threadID);
+			if (_it2 != _blocked_task.end())
+			{
+				std::cerr << "ERROR: Illegal operation, task/thread: " << _threadID << " already blocked on a resource.\n";
+				abort();
+			}
 
+			std::set<int>* _set1 = new std::set<int>();
+
+			for (int _i = 0; _i < _size; _i++)
+			{
+				std::set<int>::iterator _it1 = _resourceIDs.find(_resourceID[_i]);
+				if (_it1 == _resourceIDs.end())
+				{
+					std::cerr << "ERROR: Illegal operation, resource: " << _resourceID[_i] << " has not been declared/created.\n";
+					abort();
+				}
+				_set1->insert(_resourceID[_i]);
+			}
+
+			_blocked_task[_threadID] = _set1;
 		}
 
 		void UnblockThreads(int _resourceID)
@@ -129,7 +149,7 @@ namespace NS {
 			std::set<int>::iterator _it1 = _resourceIDs.find(_resourceID);
 			if (_it1 == _resourceIDs.end())
 			{
-				std::cerr << "Illegal operation, called on unknown or already deleted resource:" << _resourceID << ".\n";
+				std::cerr << "ERROR: Illegal operation, called on unknown or already deleted resource:" << _resourceID << ".\n";
 				abort();
 			}
 

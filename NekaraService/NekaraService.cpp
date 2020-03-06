@@ -42,6 +42,11 @@ extern "C" {
         _ns->BlockedOnResource(_resourceID);
     }
 
+    __declspec(dllexport) void NS_BlockedOnAnyResource(int _resourceID[], int _size) {
+        assert(_ns != NULL && "Nekara Testing Service not Initialized");
+        _ns->BlockedOnAnyResource(_resourceID, _size);
+    }
+
     __declspec(dllexport) void NS_SignalUpdatedResource(int _resourceID) {
         assert(_ns != NULL && "Nekara Testing Service not Initialized");
         _ns->SignalUpdatedResource(_resourceID);

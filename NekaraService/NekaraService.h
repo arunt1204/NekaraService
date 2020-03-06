@@ -120,9 +120,13 @@ namespace NS {
 			ContextSwitch();
 		}
 
-		void BlockedOnAnyResource(int _resourceID)
+		void BlockedOnAnyResource(int _resourceID[], int size)
 		{
+			_obj.lock();
+			_projectState.BlockThreadonAnyResource(_currentThread, _resourceID, size);
+			_obj.unlock();
 
+			ContextSwitch();
 		}
 
 		void SignalUpdatedResource(int _resourceID)
@@ -215,13 +219,11 @@ namespace NS {
 
 							_next_threadID = _it->first;
 							_next_obj1 = _it->second;
-							// sem_post(&_obj1);
 							break;
 						}
 						_i++;
 					}
 				}
-				// _currentThread = _projectState.UnlockSemaphoreforThread(_randnum);
 			}
 			_obj.unlock();
 

@@ -120,10 +120,10 @@ namespace NS {
 			ContextSwitch();
 		}
 
-		void BlockedOnAnyResource(int _resourceID[], int size)
+		void BlockedOnAnyResource(int _resourceID[], int _size)
 		{
 			_obj.lock();
-			_projectState.BlockThreadonAnyResource(_currentThread, _resourceID, size);
+			_projectState.BlockThreadonAnyResource(_currentThread, _resourceID, _size);
 			_obj.unlock();
 
 			ContextSwitch();

@@ -133,4 +133,55 @@ extern "C" {
         _nsj->WaitforMainTask();
     }
 
+    JNIEXPORT void JNICALL Java_NekaraServiceJava_NSJ_1CreateResource(JNIEnv* env, jobject obj, jint _resourceID) {
+        assert(_nsj != NULL && "Nekara Testing Service not Initialized");
+        _nsj->CreateResource(_resourceID);
+    }
+
+    JNIEXPORT void JNICALL Java_NekaraServiceJava_NSJ_1DeleteResource(JNIEnv* env, jobject obj, jint _resourceID) {
+        assert(_nsj != NULL && "Nekara Testing Service not Initialized");
+        _nsj->DeleteResource(_resourceID);
+    }
+
+    JNIEXPORT void JNICALL Java_NekaraServiceJava_NSJ_1BlockedOnResource(JNIEnv* env, jobject obj, jint _resourceID) {
+        assert(_nsj != NULL && "Nekara Testing Service not Initialized");
+        _nsj->BlockedOnResource(_resourceID);
+    }
+
+    // TODO: Bug! convert jint Array to int* [].
+    JNIEXPORT void JNICALL Java_NekaraServiceJava_NSJ_1BlockedOnAnyResource(JNIEnv* env, jobject obj, jintArray _resourceID, jint _size) {
+        assert(_nsj != NULL && "Nekara Testing Service not Initialized");
+        // _nsj->BlockedOnAnyResource(_resourceID, _size);
+    }
+
+    JNIEXPORT void JNICALL Java_NekaraServiceJava_NSJ_1SignalUpdatedResource(JNIEnv* env, jobject obj, jint _resourceID) {
+        assert(_nsj != NULL && "Nekara Testing Service not Initialized");
+        _nsj->SignalUpdatedResource(_resourceID);
+    }
+
+    JNIEXPORT jint JNICALL Java_NekaraServiceJava_NSJ_1GenerateResourceID(JNIEnv* env, jobject obj) {
+        assert(_nsj != NULL && "Nekara Testing Service not Initialized");
+        return _nsj->GenerateResourceID();
+    }
+
+    JNIEXPORT jint JNICALL Java_NekaraServiceJava_NSJ_1GenerateThreadTD(JNIEnv* env, jobject obj) {
+        assert(_nsj != NULL && "Nekara Testing Service not Initialized");
+        return _nsj->GenerateThreadTD();
+    }
+
+    JNIEXPORT jboolean  JNICALL Java_NekaraServiceJava_NSJ_1CreateNondetBool(JNIEnv* env, jobject obj) {
+        assert(_nsj != NULL && "Nekara Testing Service not Initialized");
+        return _nsj->CreateNondetBool();
+    }
+
+    JNIEXPORT jint JNICALL Java_NekaraServiceJava_NSJ_1CreateNondetInteger(JNIEnv* env, jobject obj, jint _maxValue) {
+        assert(_nsj != NULL && "Nekara Testing Service not Initialized");
+        return _nsj->CreateNondetInteger(_maxValue);
+    }
+
+    JNIEXPORT jboolean JNICALL Java_NekaraServiceJava_NSJ_1Dispose(JNIEnv* env, jobject obj) {
+        _nsj = NULL;
+        return true;
+    }
+
 }

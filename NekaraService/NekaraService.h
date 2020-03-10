@@ -33,6 +33,13 @@ namespace NS {
 			_seed = nanoseconds.count() % 999;
 			std::cout << "Your Program is being tested with random seed: " << _seed << "\n";
 			std::cout << "Give the same Seed to the Testing Service for a Re-Play." << "\n";
+			srand(_seed);
+
+			_obj.lock();
+			sem_t _obj1;
+			sem_init(&_obj1, 0, 0);
+			_projectState._th_to_sem[0] = _obj1;
+			_obj.unlock();
 		}
 
 		NekaraService(int _seed)
@@ -42,6 +49,13 @@ namespace NS {
 			_resource_ID_generator = 100000;
 			this->_seed = _seed;
 			std::cout << "Your Program is being tested with seed: " << this->_seed << "\n";
+			srand(_seed);
+
+			_obj.lock();
+			sem_t _obj1;
+			sem_init(&_obj1, 0, 0);
+			_projectState._th_to_sem[0] = _obj1;
+			_obj.unlock();
 		}
 
 		void CreateThread()
@@ -162,8 +176,6 @@ namespace NS {
 		{
 			bool _NondetBool;
 			_obj.lock();
-			srand(_seed);
-			_seed = _seed + 10;
 			_NondetBool = rand() % 2;
 			_obj.unlock();
 
@@ -174,8 +186,6 @@ namespace NS {
 		{
 			int _NondetInteger;
 			_obj.lock();
-			srand(_seed);
-			_seed = _seed + 10;
 			_NondetInteger = rand() % _maxValue;
 			_obj.unlock();
 
@@ -188,63 +198,97 @@ namespace NS {
 				std::cout << "CS-entry" << "\n";
 			}
 
+			WaitForPendingTaskCreations();
+
 			int _next_threadID = -99;
+			int _current_thread;
+			bool _current_thread_running = false;
 			sem_t _next_obj1;
+			sem_t _crr_obj1;
 
 			_obj.lock();
+			_current_thread = this->_currentThread;
 
-			srand(_seed);
-			_seed = _seed + 10;
+			std::map<int, sem_t>::iterator _ct_it = _projectState._th_to_sem.find(_current_thread);
+			if (_ct_it != _projectState._th_to_sem.end())
+			{
+				_current_thread_running = true;
+				_crr_obj1 = _ct_it->second;
+			}
 
 			int _size_t_s = _projectState._th_to_sem.size();
 			int _size_b_t = _projectState._blocked_task.size();
 			int _size = _size_t_s - _size_b_t;
 
-
-			if (_size > 0)
+			if (_size == 0 && _size_t_s != 0)
 			{
-				int _randnum = rand() % _size;
+				std::cerr << "ERROR: Deadlock detected" << ".\n";
+				abort();
+			}
 
-				int _i = 0;
+			if (_size == 0 && _size_t_s == 0)
+			{
+				_obj.unlock();
+				return;
+			}
 
-				for (std::map<int, sem_t>::iterator _it = _projectState._th_to_sem.begin(); _it != _projectState._th_to_sem.end(); ++_it)
+			int _randnum = rand() % _size;
+
+			int _i = 0;
+
+			for (std::map<int, sem_t>::iterator _it = _projectState._th_to_sem.begin(); _it != _projectState._th_to_sem.end(); ++_it)
+			{
+				std::map<int, std::set<int>*>::iterator _bt_it = _projectState._blocked_task.find(_it->first);
+
+				if (_bt_it == _projectState._blocked_task.end())
 				{
-					std::map<int, std::set<int>*>::iterator _bt_it = _projectState._blocked_task.find(_it->first);
-
-					if (_bt_it == _projectState._blocked_task.end())
+					if (_i == _randnum)
 					{
-						if (_i == _randnum)
-						{
-							std::cout << "Ctrl given to TaskID:" << _it->first << "\n";
+						std::cout << "Ctrl given to TaskID:" << _it->first << "\n";
 
-							_next_threadID = _it->first;
-							_next_obj1 = _it->second;
-							break;
-						}
-						_i++;
+						_next_threadID = _it->first;
+						_next_obj1 = _it->second;
+						break;
 					}
+					_i++;
 				}
 			}
 			_obj.unlock();
 
-			if (_size > 0 && _currentThread != _next_threadID)
+			if (_next_threadID == _current_thread)
 			{
-				std::map<int, sem_t>::iterator _ct_it = _projectState._th_to_sem.find(_currentThread);
-
+				// no op
+			}
+			else
+			{
 				_obj.lock();
 				_currentThread = _next_threadID;
 				_obj.unlock();
 
 				sem_post(&_next_obj1);
 
-				if (_ct_it != _projectState._th_to_sem.end())
+				if (_current_thread_running)
 				{
-					sem_wait(&(_ct_it->second));
+					sem_wait(&_crr_obj1);
 				}
 			}
 
 			if (_debug) {
 				std::cout << "CS-exit" << "\n";
+			}
+		}
+
+		void WaitForPendingTaskCreations()
+		{
+			while (true)
+			{
+				_obj.lock();
+				if (_projectState.numPendingTaskCreations == 0)
+				{
+					_obj.unlock();
+					return;
+				}
+				_obj.unlock();
 			}
 		}
 
@@ -254,19 +298,7 @@ namespace NS {
 				std::cout << "WMT-entry" << "\n";
 			}
 
-			while (true)
-			{
-				_obj.lock();
-				if (_projectState.numPendingTaskCreations == 0)
-				{
-					_obj.unlock();
-					break;
-				}
-				_obj.unlock();
-
-			}
-
-			ContextSwitch();
+			EndThread(0);
 
 			if (_debug) {
 				std::cout << "WMT-exit" << "\n";

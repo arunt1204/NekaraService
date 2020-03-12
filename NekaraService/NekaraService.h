@@ -18,6 +18,8 @@ namespace NS {
 		bool _debug = false;
 		int _thread_ID_generator;
 		int _resource_ID_generator;
+		bool _test_var = true;
+		int _max_decisions;
 
 	public:
 		NekaraService()
@@ -30,14 +32,14 @@ namespace NS {
 			_currentThread = 0;
 			_thread_ID_generator = 1000;
 			_resource_ID_generator = 100000;
+			_max_decisions = 1000;
 			_seed = nanoseconds.count() % 999;
 			std::cout << "Your Program is being tested with random seed: " << _seed << "\n";
 			std::cout << "Give the same Seed to the Testing Service for a Re-Play." << "\n";
 			srand(_seed);
 
 			_obj.lock();
-			sem_t _obj1;
-			sem_init(&_obj1, 0, 0);
+			HANDLE _obj1 = CreateSemaphoreW(NULL, 0, 1, NULL);
 			_projectState._th_to_sem[0] = _obj1;
 			_obj.unlock();
 		}
@@ -47,13 +49,13 @@ namespace NS {
 			_currentThread = 0;
 			_thread_ID_generator = 1000;
 			_resource_ID_generator = 100000;
+			_max_decisions = 1000;
 			this->_seed = _seed;
 			std::cout << "Your Program is being tested with seed: " << this->_seed << "\n";
 			srand(_seed);
 
 			_obj.lock();
-			sem_t _obj1;
-			sem_init(&_obj1, 0, 0);
+			HANDLE _obj1 = CreateSemaphoreW(NULL, 0, 1, NULL);
 			_projectState._th_to_sem[0] = _obj1;
 			_obj.unlock();
 		}
@@ -82,10 +84,17 @@ namespace NS {
 
 			_obj.lock();
 			_projectState.ThreadStarting(_threadID);
-			sem_t _obj1 = _projectState._th_to_sem.find(_threadID)->second;
+			HANDLE _obj1 = _projectState._th_to_sem.find(_threadID)->second;
 			_obj.unlock();
 
-			sem_wait(&_obj1);
+			DWORD _dwWaitResult = WaitForSingleObject(_obj1, 100000L);
+			switch (_dwWaitResult)
+			{
+			case WAIT_TIMEOUT:
+				std::cerr << "Windows ERROR: Semaphore waiting Time-out." << ".\n";
+				abort();
+				break;
+			}
 
 			if (_debug) {
 				std::cout << "ST-exit: " << _threadID << "\n";
@@ -203,13 +212,23 @@ namespace NS {
 			int _next_threadID = -99;
 			int _current_thread;
 			bool _current_thread_running = false;
-			sem_t _next_obj1;
-			sem_t _crr_obj1;
+			HANDLE _next_obj1 = NULL;
+			HANDLE _crr_obj1 = NULL;
 
 			_obj.lock();
+
+			// TODO: The max-decision count has to be re-coded with Trace capture.
+			if (_max_decisions < 0)
+			{
+				std::cerr << "ERROR: Maximum steps reached; the program might be in a live-lock state! (or the program might be a non-terminating program)" << ".\n";
+				_obj.unlock();
+				abort();
+			}
+			_max_decisions--;
+
 			_current_thread = this->_currentThread;
 
-			std::map<int, sem_t>::iterator _ct_it = _projectState._th_to_sem.find(_current_thread);
+			std::map<int, HANDLE>::iterator _ct_it = _projectState._th_to_sem.find(_current_thread);
 			if (_ct_it != _projectState._th_to_sem.end())
 			{
 				_current_thread_running = true;
@@ -223,20 +242,25 @@ namespace NS {
 			if (_size == 0 && _size_t_s != 0)
 			{
 				std::cerr << "ERROR: Deadlock detected" << ".\n";
+				_obj.unlock();
 				abort();
 			}
 
 			if (_size == 0 && _size_t_s == 0)
 			{
+				_test_var = false;
 				_obj.unlock();
 				return;
 			}
 
-			int _randnum = rand() % _size;
+			int _t1 = rand();
+			int _randnum = _t1 % _size;
+
+			// int _randnum = rand() % _size;
 
 			int _i = 0;
 
-			for (std::map<int, sem_t>::iterator _it = _projectState._th_to_sem.begin(); _it != _projectState._th_to_sem.end(); ++_it)
+			for (std::map<int, HANDLE>::iterator _it = _projectState._th_to_sem.begin(); _it != _projectState._th_to_sem.end(); ++_it)
 			{
 				std::map<int, std::set<int>*>::iterator _bt_it = _projectState._blocked_task.find(_it->first);
 
@@ -244,7 +268,7 @@ namespace NS {
 				{
 					if (_i == _randnum)
 					{
-						std::cout << "Ctrl given to TaskID:" << _it->first << "\n";
+						// std::cout << "Ctrl given to TaskID:" << _it->first << " Random:" << _t1 << " A:" << _size_t_s << " B: " << _size_b_t  <<  "\n";
 
 						_next_threadID = _it->first;
 						_next_obj1 = _it->second;
@@ -265,11 +289,18 @@ namespace NS {
 				_currentThread = _next_threadID;
 				_obj.unlock();
 
-				sem_post(&_next_obj1);
+				ReleaseSemaphore(_next_obj1, 1, NULL);
 
 				if (_current_thread_running)
 				{
-					sem_wait(&_crr_obj1);
+					DWORD _dwWaitResult = WaitForSingleObject(_crr_obj1, 100000L);
+					switch (_dwWaitResult)
+					{
+					case WAIT_TIMEOUT:
+						std::cerr << "Windows ERROR: Semaphore waiting Time-out." << ".\n";
+						abort();
+						break;
+					}
 				}
 			}
 
@@ -304,6 +335,17 @@ namespace NS {
 				std::cout << "WMT-exit" << "\n";
 			}
 		}
+
+		void _Test_forCS()
+		{
+			while (_test_var) { }
+		}
+
+		int _Test_Get_Seed()
+		{
+			return _seed;
+		}
+
 	};
 
 }

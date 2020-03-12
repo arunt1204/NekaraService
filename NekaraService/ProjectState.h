@@ -6,15 +6,16 @@
 #include <map>
 #include <stack>
 #include <mutex> 
-#include <semaphore.h>
+// #include <semaphore.h>
 #include <cassert>
+#include <windows.h>
 
 namespace NS {
 
 	class ProjectState {
 	public:
 		int numPendingTaskCreations;
-		std::map<int, sem_t> _th_to_sem;
+		std::map<int, HANDLE> _th_to_sem;
 		std::map<int, std::set<int>*> _blocked_task;
 		std::set<int> _resourceIDs;
 
@@ -36,7 +37,7 @@ namespace NS {
 				abort();
 			}
 
-			std::map<int, sem_t>::iterator _it1 = _th_to_sem.find(_threadID);
+			std::map<int, HANDLE>::iterator _it1 = _th_to_sem.find(_threadID);
 			if (_it1 != _th_to_sem.end())
 			{
 				std::cerr << "ERROR: Duplicate declaration of Task/Thread id:" << _threadID << ".\n";
@@ -44,23 +45,21 @@ namespace NS {
 			}
 
 			this->numPendingTaskCreations--;
-			sem_t _obj1;
-			sem_init(&_obj1, 0, 0);
+			HANDLE _obj1 = CreateSemaphore(NULL, 0, 1, NULL);
 			_th_to_sem[_threadID] = _obj1;
 
 		}
 
 		void ThreadEnded(int _threadID)
 		{
-			std::map<int, sem_t>::iterator _it1 = _th_to_sem.find(_threadID);
+			std::map<int, HANDLE>::iterator _it1 = _th_to_sem.find(_threadID);
 			if (_it1 == _th_to_sem.end())
 			{
 				std::cerr << "ERROR: EndTask/Thread called on unknown or already completed Task/Thread:" << _threadID << ".\n";
 				abort();
 			}
 
-			std::map<int, sem_t>::iterator it = _th_to_sem.find(_threadID);
-			_th_to_sem.erase(it);
+			_th_to_sem.erase(_it1);
 		}
 
 		void AddResource(int _resourceID)

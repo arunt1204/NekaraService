@@ -89,6 +89,14 @@ NS::NekaraService* _nsj;
         _ns = NULL;
         return true;
     }
+
+    __declspec(dllexport) void NS_Test_forCS() {
+        _ns->_Test_forCS();
+    }
+
+    __declspec(dllexport) int NS_Test_Get_Seed() {
+        return _ns->_Test_Get_Seed();
+    }
 }
 
 
